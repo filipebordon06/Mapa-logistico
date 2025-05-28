@@ -1,0 +1,138 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from ipywidgets import interact, widgets
+
+# Parâmetros fixos
+x0 = 0.5
+iteracoes = 100
+
+# Define o mapa logístico
+def mapa(a, x):
+    return a * x * (1 - x)
+
+# Plot interativo com controle apenas do parâmetro 'a'
+@interact(
+    a=widgets.FloatSlider(value=3.58,
+                         min=1.0,
+                         max=3.999,
+                         step=0.001,
+                         description='Parâmetro a',
+                         readout_format='.3f',
+                         continuous_update=False)
+)
+def plot_mapa_logistico(a):
+    # Gera as iterações
+    x = np.zeros(iteracoes + 1)
+    x[0] = x0
+
+    for i in range(iteracoes):
+        x[i+1] = mapa(a, x[i])
+
+    # Cria a figura
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+
+    # Configurações do gráfico
+    ax1.plot(range(iteracoes + 1), x, 'b-', linewidth=0.5, alpha=0.7)
+    ax1.set_title(f'Série temporal (a = {a:.4f})')
+    ax1.set_xlabel('Iteração')
+    ax1.set_ylabel('Valor de x')
+    ax1.grid(True, alpha=0.3)
+
+    ax2.plot([a]*100, x[-100:], 'b.', markersize=1, alpha=0.5)
+    ax2.set_title('Comportamento')
+    ax2.set_xlabel('Parametro a')
+    ax2.set_ylabel('Valores estáveis')
+    ax2.grid(True, alpha=0.3)
+
+    # Adiciona informações sobre o comportamento
+    if a < 3.0:
+        plt.text(0.02, 0.95, "Convergência para ponto fixo", transform=plt.gca().transAxes,
+                bbox=dict(facecolor='yellow', alpha=0.5))
+    elif 3.0 <= a < 3.56995:
+        plt.text(0.02, 0.95, "Comportamento periódico", transform=plt.gca().transAxes,
+                bbox=dict(facecolor='orange', alpha=0.5))
+    else:
+        plt.text(0.02, 0.95, "Região caótica", transform=plt.gca().transAxes,
+                bbox=dict(facecolor='red', alpha=0.5))
+
+    plt.show()
+
+
+############# SEGUNDA PARTE, MAPA DE BIFURCAÇÃO ################
+
+
+# Define o mapa logístico
+def mapa_logistico(a, x):
+    return a * x * (1 - x)
+
+# Parâmetros para o gráfico de bifurcação
+a_min = 0
+a_max = 4
+num_a = 1000
+iteracoes = 1000
+transiente = 800  # Número de iterações para descartar (transiente)
+
+# Array de valores de a
+a_values = np.linspace(a_min, a_max, num_a)
+
+# Configuração do gráfico
+plt.figure(figsize=(12, 8))
+
+# Para cada valor de a, calculamos as iterações
+for a in a_values:
+    x = 0.5
+    # Descartamos as primeiras iterações (transiente)
+    for _ in range(transiente):
+        x = mapa_logistico(a, x)
+    # Plotamos as próximas iterações
+    for _ in range(iteracoes - transiente):
+        x = mapa_logistico(a, x)
+        plt.plot(a, x, ',k', alpha=0.25)
+
+# Configurações do gráfico
+plt.title('Diagrama de Bifurcação do Mapa Logístico')
+plt.xlabel('Parâmetro a')
+plt.ylabel('Valores estáveis de x')
+plt.grid(True, alpha=0.3)
+plt.show()
+
+
+############# TERCEIRA PARTE, CICLO 3 DE ESTABILIDADE ################
+
+
+# Define o mapa logístico
+def mapa_logistico(a, x):
+    return a * x * (1 - x)
+
+# Parâmetros para o gráfico de bifurcação
+a_min = 3.82
+a_max = 3.865
+num_a = 1000
+iteracoes = 1000
+transiente = 800  # Número de iterações para descartar (transiente)
+
+# Array de valores de a
+a_values = np.linspace(a_min, a_max, num_a)
+
+# Configuração do gráfico
+plt.figure(figsize=(12, 8))
+
+# Para cada valor de a, calculamos as iterações
+for a in a_values:
+    x = 0.5  # Valor inicial fixo
+    # Descartamos as primeiras iterações (transiente)
+    for _ in range(transiente):
+        x = mapa_logistico(a, x)
+    # Plotamos as próximas iterações
+    for _ in range(iteracoes - transiente):
+        x = mapa_logistico(a, x)
+        plt.plot(a, x, ',k', alpha=0.25)
+# Configurações do gráfico
+plt.plot(a, x, '.', markersize=1, color='black', alpha=0.2)
+plt.title('Diagrama de Bifurcação do Mapa Logístico')
+plt.xlabel('Parâmetro a')
+plt.ylabel('Valores estáveis de x')
+#plt.ylim(0.14,0.98)
+plt.tight_layout()
+plt.grid(True, alpha=0.3)
+plt.show()
