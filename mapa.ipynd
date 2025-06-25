@@ -1,3 +1,5 @@
+############# PRIMEIRA PARTE, SÉRIES TEMPORAIS E PONTOS DE ESTABILIDADE ################
+
 import numpy as np
 import matplotlib.pyplot as plt
 from ipywidgets import interact, widgets
