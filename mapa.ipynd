@@ -136,3 +136,116 @@ plt.ylabel('Valores estáveis de x')
 plt.tight_layout()
 plt.grid(True, alpha=0.3)
 plt.show()
+
+############# QUARTA PARTE, ESTABILIDADE DO PONTO INSTÁVEL 1-PERIÓDICO ################
+
+def mapa_controlado(a, x, k, x_hat):
+    u = k * (x - x_hat)
+    result = a * x * (1 - x) + u
+
+    # Verifica se o número é finito (evita NaN ou Inf)
+    if not np.isfinite(result):
+        return x_hat  # reinicializa no ponto fixo instável
+
+    # Clipping para evitar explosões: faixa segura [-2, 3]
+    result = np.clip(result, -2, 3)
+
+    return result
+
+# Parâmetros
+a = 3.7
+x_hat = 1 - 1/a  # ponto fixo instável ~0.7297
+k_values = np.linspace(0, 3, 1000)
+iterations = 1000
+last = 100
+
+# Gráfico
+plt.figure(figsize=(10, 6))
+
+for k in k_values:
+    x = 0.5  # condição inicial
+
+    # Iterações para remover o transiente
+    for _ in range(iterations - last):
+        x = mapa_controlado(a, x, k, x_hat)
+        if abs(x) > 1e3 or not np.isfinite(x):
+            x = x_hat  # reinicia se explodir numericamente
+
+    # Coleta dos últimos valores para o gráfico
+    xs = []
+    for _ in range(last):
+        x = mapa_controlado(a, x, k, x_hat)
+        if 0 <= x <= 1:
+            xs.append(x)
+        else:
+            break  # ignora valores instáveis
+    if xs:  # só plota se os dados forem válidos
+        plt.plot([k]*len(xs), xs, ',k', alpha=0.25)
+
+plt.title('Diagrama de bifurcação do mapa logístico controlado')
+plt.xlabel('k (coeficiente de feedback)')
+plt.ylabel('x')
+plt.xlim([0, 3])
+plt.ylim([0, 1])
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+############# QUINTA PARTE, ESTABILIDADE OCASIONAL DO SISTEMA ################
+
+def sistema_ocasional(a, x, k, x_hat, N, n):
+    # Controle ocasional com saturação de u
+    if n % N == 0:
+        u = k * (x - x_hat)
+        result = a * x * (1 - x) + u
+    else:
+        result = a * x * (1 - x)
+
+    # Verificação de valores finitos
+    if not np.isfinite(result):
+        return x_hat  # retorna ao ponto fixo se ocorrer overflow
+
+    # Saturação suave para manter x em faixa segura
+    result = np.clip(result, -1, 2)  # valores além disso causam instabilidade
+    return result
+
+# Parâmetros do mapa
+a = 3.7
+x_hat = 1 - 1/a  # ponto fixo do mapa logístico para esse a
+N = 3
+k_values = np.linspace(1.0, 2.2, 1000)  # faixa de valores de k
+iterations = 5000
+last = 300
+
+# Gráfico
+plt.figure(figsize=(10, 6))
+
+for k in k_values:
+    x = x_hat + np.random.uniform(-0.01, 0.01)  # pequena perturbação inicial
+
+    # Iterações para estabilizar o sistema
+    for n in range(iterations - last):
+        x = sistema_ocasional(a, x, k, x_hat, N, n)
+        if abs(x) > 1e3 or not np.isfinite(x):
+            x = x_hat  # reinicia caso ocorra instabilidade
+
+    # Coleta dos últimos valores para o diagrama
+    xs = []
+    for n in range(iterations - last, iterations):
+        x = sistema_ocasional(a, x, k, x_hat, N, n)
+        if 0 <= x <= 1:  # apenas valores dentro do intervalo
+            xs.append(x)
+        else:
+            break  # interrompe se sair da faixa útil
+    if xs:  # plota apenas se tiver pontos válidos
+        plt.plot([k] * len(xs), xs, ',k', alpha=0.15)
+
+# Personalização do gráfico
+plt.title('Diagrama de bifurcação do sistema ocasional com controle')
+plt.xlabel('k (coeficiente de feedback)')
+plt.ylabel('x')
+plt.xlim([1.0, 2.2]) #conforme k aumenta o feedback fica mais forte e o sistema pode entrar em oscilações podendo transicionar a um regime caótico
+plt.ylim([0.45, 1])
+plt.grid(True)
+plt.tight_layout()
+plt.show()
